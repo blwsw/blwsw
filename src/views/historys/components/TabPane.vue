@@ -52,12 +52,12 @@
           <span>{{ scope.row.pdcNo }}</span>
         </template>
       </el-table-column>
-    <template v-if="type == 'L1'">
       <el-table-column min-width="70px" label="设备状态" show-overflow-tooltip>
         <template slot-scope="{row}">
           <span>{{ row.ErrFlag |statusFilter }}</span>
         </template>
       </el-table-column>
+    <template v-if="type == 'L1'">
       <el-table-column min-width="70px" label="雷击状态" show-overflow-tooltip>
         <template slot-scope="{row}">
           <span>{{ row.ErrThunder |GZFilter }}</span>
@@ -306,8 +306,12 @@ export default {
         })
 
         import('@/vendor/Export2Excel').then(excel => {
-          const tHeader = ['节点编号', '发生日期', '配电箱号', '设备状态', '雷击状态', '温度状态', '温度劣化', '漏电劣化1', '漏电劣化2', '漏电劣化3', '脱离器1', '脱离器2', '脱离器3', '脱离器4', '安装位置']
-          const filterVal = ['addr', 'In_Time', 'pdcNo', 'ErrFlagName', 'ErrThunderName', 'ErrTempName', 'ErrLeihuaName', 'ErrLC1Name', 'ErrLC2Name', 'ErrLC3Name', 'Switch1Name', 'Switch2Name', 'Switch3Name', 'Switch4Name', 'InstallPos']
+          var tHeader=["节点编号","发生日期","配电箱号","设备状态","雷击状态","温度状态","温度劣化","漏电劣化1","漏电劣化2","漏电劣化3","脱离器1","脱离器2","脱离器3","脱离器4","安装位置"];
+           var filterVal=["addr","In_Time","pdcNo","ErrFlagName","ErrThunderName","ErrTempName","ErrLeihuaName","ErrLC1Name","ErrLC2Name","ErrLC3Name","Switch1Name","Switch2Name","Switch3Name","Switch4Name","InstallPos"];
+          if("L2"===e.type){
+            tHeader=["节点编号","发生日期","配电箱号","设备状态","接地状态","安装位置"],
+              filterVal=["addr","In_Time","pdcNo","ErrFlagName","ErrRName","InstallPos"]
+          }
 
           const data = this.formatJson(filterVal)
           excel.export_json_to_excel({
@@ -329,10 +333,45 @@ export default {
       }))
     },
     handlePrint() {
-      var newWindow = window.open('打印窗口', '_blank')
-      var docStr = document.getElementById('tableList').innerHTML
-      // console.log(docStr)
-      newWindow.document.write(docStr)
+      var newWindow = window.open('打印窗口', '_blank');
+      var t=["节点编号","发生日期","配电箱号","设备状态","雷击状态","温度状态","温度劣化","漏电劣化1","漏电劣化2","漏电劣化3","脱离器1","脱离器2","脱离器3","脱离器4","安装位置"],
+        n=["addr","In_Time","pdcNo","ErrFlagName","ErrThunderName","ErrTempName","ErrLeihuaName","ErrLC1Name","ErrLC2Name","ErrLC3Name","Switch1Name","Switch2Name","Switch3Name","Switch4Name","InstallPos"];
+      "L2"===this.type&&(t=["节点编号","发生日期","配电箱号","设备状态","接地状态","安装位置"],
+        n=["addr","In_Time","pdcNo","ErrFlagName","ErrRName","InstallPos"]);
+      var i={T:"有故障",F:"无故障",D:"离线"},
+        o={"00":"正常","01":"预警",10:"报警"},
+        l={1:"报警",0:"正常"};
+      for(var a="<table style='width: 1200px;'><tr>",r=0;r<t.length;r++){
+        if("发生日期"==t[r]){
+          a+="<td width='180px' style='align-items: center;font-weight: bold;'>"+t[r]+"</td>"
+        }else{
+          a+="<td width='120px' style='align-items: center;font-weight: bold;'>"+t[r]+"</td>";
+        }
+      }
+      a+="</tr>";
+
+      this.list.map((function(e,t){
+        e.ErrFlagName=i[e.ErrFlag],
+          e.ErrThunderName=o[e.ErrThunder],
+          e.ErrTempName=o[e.ErrTemp],
+          e.ErrLeihuaName=o[e.ErrLeihua],
+          e.ErrLC1Name=o[e.ErrLC1],
+          e.ErrLC2Name=o[e.ErrLC2],
+          e.ErrLC3Name=o[e.ErrLC3],
+          e.Switch1Name=l[e.Switch1],
+          e.Switch2Name=l[e.Switch2],
+          e.Switch3Name=l[e.Switch3],
+          e.Switch4Name=l[e.Switch4],
+          e.ErrRName=l[e.ErrR],
+          a+="<tr>";
+        for(t=0;t<n.length;t++){
+          a+="<td style='align-items: center'>"+e[n[t]]+"</td>";
+        }
+        a+="</tr>"
+      })),
+        a+="</table>";
+
+      newWindow.document.write(a)
       // newWindow.document.body.innerHTML = docStr
       newWindow.document.close()
       newWindow.print()
